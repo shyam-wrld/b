@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+  <title>Document</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      font-family: 'Poppins', sans-serif;
+      overflow: hidden;
+    }
+
+    body.input-screen {
+      background-color: rgb(255, 87, 163);
+    }
+
+    body.wish-screen {
+      background-image: url('images/bg2.jpg');
+    }
+
+    /* Mobile overrides */
+    @media (max-width: 768px) {
+      body.input-screen {
+        background-color: rgb(255, 87, 163);
+      }
+
+      body.wish-screen {
+        background-image: url('images/bg2.jpg');
+      }
+    }
+
+    body {
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-position: center center;
+    }
+
+    .overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0, 0, 0, 0.3);
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 2;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+      color: #fff;
+    }
+
+    h1 {
+      font-family: 'Pacifico', cursive;
+      font-size: 3rem;
+      margin-bottom: 20px;
+      color: #fffefb;
+      text-shadow: 2px 2px 5px #000;
+      padding: 0 10px;
+    }
+
+    input, button {
+      padding: 10px 20px;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 25px;
+      outline: none;
+    }
+
+    #inputSection {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      background-color: #ff4081;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #f50057;
+    }
+
+    .message {
+      font-size: 1.5rem;
+      margin-top: 30px;
+      max-width: 90%;
+      color: #fffdd0;
+      text-shadow: 1px 1px 3px #000;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0; left: 0;
+      z-index: 1;
+      pointer-events: none;
+      display: none;
+    }
+
+    .balloon {
+      position: absolute;
+      width: 40px;
+      animation: floatUp linear forwards;
+      z-index: 0;
+    }
+
+    @keyframes floatUp {
+      0% {
+        transform: translateY(100vh);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-150px);
+        opacity: 0;
+      }
+    }
+
+    #muteBtn {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 99;
+  background-color: rgba(255,255,255,0.85);
+  border: none;
+  padding: 8px 14px;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: none;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+@media (max-width: 768px) {
+  #muteBtn {
+    top: 10px;
+    right: 10px;
+    font-size: 0.9rem;
+    padding: 7px 12px;
+  }
+}
+
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 1.8rem;
+        line-height: 2.2rem;
+        margin-bottom: 15px;
+      }
+
+      .message {
+        font-size: 1rem;
+        padding: 0 15px;
+        line-height: 1.6rem;
+      }
+
+      #inputSection {
+        flex-direction: column;
+        width: 100%;
+        max-width: 300px;
+      }
+
+      input, button {
+        width: 100%;
+        font-size: 1rem;
+      }
+
+      #muteBtn {
+        top: 10px;
+        right: 10px;
+        width: 80px;
+        font-size: 0.9rem;
+        padding: 6px 12px;
+      }
+    }
+  </style>
+</head>
+<body class="input-screen">
+  <div class="overlay"></div>
+  <canvas id="confettiCanvas"></canvas>
+  <button id="muteBtn">Mute</button>
+
+  <div class="container">
+    <h1 id="mainHeading">Enter Your Name</h1>
+    <div id="inputSection">
+      <input type="text" id="nameInput" placeholder="Your Name" />
+      <button onclick="startCelebration()">submit</button>
+    </div>
+    <div class="message" id="wishMessage"></div>
+  </div>
+
+  <audio id="birthdayAudio" src="audios/happy-birthday-352722.mp3" preload="auto"></audio>
+
+  <script>
+    const canvas = document.getElementById('confettiCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let confetti = [];
+
+    function randomColor() {
+      const colors = ['#ffcc00', '#ff4081', '#40c4ff', '#69f0ae', '#ff1744'];
+      return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    function createConfetti() {
+      for (let i = 0; i < 5; i++) {
+        confetti.push({
+          x: Math.random() * canvas.width,
+          y: -100,
+          r: Math.random() * 3 + 2,
+          c: randomColor(),
+          v: Math.random() * 3 + 1,
+        });
+      }
+    }
+
+    function drawConfetti() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      confetti.forEach((conf, i) => {
+        ctx.beginPath();
+        ctx.arc(conf.x, conf.y, conf.r, 0, Math.PI * 2);
+        ctx.fillStyle = conf.c;
+        ctx.fill();
+        conf.y += conf.v;
+        if (conf.y > canvas.height) confetti.splice(i, 1);
+      });
+      requestAnimationFrame(drawConfetti);
+    }
+
+    function startConfetti() {
+      canvas.style.display = 'block';
+      setInterval(createConfetti, 200);
+      drawConfetti();
+    }
+
+    function createBalloon() {
+      const img = document.createElement('img');
+      img.src = 'images/bln.png';
+      img.className = 'balloon';
+      const size = Math.random() * 40 + 30;
+      img.style.width = size + 'px';
+      img.style.left = Math.random() * (window.innerWidth - size) + 'px';
+      img.style.animationDuration = (Math.random() * 2 + 3) + 's';
+      document.body.appendChild(img);
+      setTimeout(() => img.remove(), 6000);
+    }
+
+    setInterval(createBalloon, 150);
+
+    function startCelebration() {
+      const name = document.getElementById('nameInput').value.trim();
+      if (!name) return alert("Please enter your name!");
+
+      document.getElementById('inputSection').style.display = 'none';
+
+      // Change background and heading
+      document.body.classList.remove('input-screen');
+      document.body.classList.add('wish-screen');
+      document.getElementById('mainHeading').innerText = `Happy Birthday, ${name}!`;
+
+      // Show message
+      document.getElementById('wishMessage').innerHTML = `
+        ✨ Dear ${name}, ✨<br><br>
+        Roses are red 🌹, the sky is blue 🌁,<br>
+        Today is magical 🪄— all because of you!🫵🏼<br>
+        May your day be filled with cake 🎂 and cheer 🥂,<br>
+        With laughter and love from far and near! 💝<br>
+        Wishes from Shyam Santhosh 🥳
+      `;
+
+      const audio = document.getElementById('birthdayAudio');
+      audio.play();
+      document.getElementById('muteBtn').style.display = 'block';
+
+      startConfetti();
+    }
+
+    document.getElementById('muteBtn').addEventListener('click', () => {
+      const audio = document.getElementById('birthdayAudio');
+      const btn = document.getElementById('muteBtn');
+      audio.muted = !audio.muted;
+      btn.innerText = audio.muted ? 'Unmute' : 'Mute';
+    });
+
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+  </script>
+</body>
+</html>
